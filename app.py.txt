@@ -1,0 +1,48 @@
+import streamlit as st
+import pandas as pd
+
+# --- CONFIGURATION ---
+BASE_PRICES = {
+    "Kitchen Remodel": {"Mid-Range": 150, "High-End": 300},
+    "Master Bath Remodel": {"Mid-Range": 200, "High-End": 400},
+    "Full Home Renovation": {"Mid-Range": 60, "High-End": 120},
+    "Deck/Patio": {"Mid-Range": 35, "High-End": 85},
+    "Room Addition": {"Mid-Range": 200, "High-End": 350}
+}
+
+LOCATION_TIERS = {
+    "Tier 1 (NYC, SF, LA)": 1.60,
+    "Tier 2 (Austin, Miami, Chicago)": 1.25,
+    "Tier 3 (National Average)": 1.00,
+    "Tier 4 (Rural/Low Cost)": 0.85
+}
+
+# --- LOGIC ---
+def calculate_estimate(project_type, sq_ft, tier_factor):
+    mid_price = BASE_PRICES[project_type]["Mid-Range"]
+    high_price = BASE_PRICES[project_type]["High-End"]
+    return (sq_ft * mid_price * tier_factor), (sq_ft * high_price * tier_factor)
+
+# --- UI ---
+st.set_page_config(page_title="Renovation Feasibility Calculator", page_icon="🏗️")
+st.title("🏗️ Renovation Feasibility Engine")
+
+with st.sidebar:
+    st.header("Project Details")
+    market_tier = st.selectbox("Select Market Tier", options=LOCATION_TIERS.keys(), index=1)
+    project_type = st.selectbox("Project Type", options=BASE_PRICES.keys())
+    sq_ft = st.number_input("Square Footage", min_value=10, value=150, step=10)
+
+mid_est, high_est = calculate_estimate(project_type, sq_ft, LOCATION_TIERS[market_tier])
+
+st.subheader(f"Estimate: {project_type}")
+col1, col2 = st.columns(2)
+col1.metric("Mid-Range Finishes", f"${mid_est:,.0f}")
+col2.metric("High-End Luxury", f"${high_est:,.0f}")
+
+st.table(pd.DataFrame({
+    "Breakdown": ["Materials (40%)", "Labor (40%)", "Permits (5%)", "Markup (15%)"],
+    "Cost": [f"${high_est*.4:,.0f}", f"${high_est*.4:,.0f}", f"${high_est*.05:,.0f}", f"${high_est*.15:,.0f}"]
+}))
+
+st.warning("⚠️ Automated estimate only. For a verified quote review, contact [Your Name] at [Your Email].")
